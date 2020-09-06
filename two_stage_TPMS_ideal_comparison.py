@@ -181,7 +181,7 @@ def main():
     current_call = 0
     
     scores = []
-    ideal_scores = []
+    ideal_match_qualities = []
     min_scores = []
     min_split_revss = []
     max_scores = []
@@ -190,6 +190,8 @@ def main():
     split_pap_count = int(np.round(d * pap_split/100))
     pap_split_record = []
     rev_split_record = []
+    
+    total_matches = l1 * d + l2 * split_pap_count
     
     for pap_iter in range(pap_samples):
         max_score = -1
@@ -211,14 +213,14 @@ def main():
         for paper in split_paps:
             ideal_split_test_capacities[paper] += l2
         
-        ideal_TPMS_score = input_paper_constraints_LP(k, ideal_split_test_capacities)
-        ideal_scores.append(ideal_TPMS_score)
+        ideal_match_quality = input_paper_constraints_LP(k, ideal_split_test_capacities)/total_matches
+        ideal_match_qualities.append(ideal_match_quality)
         
         ##TWO-STAGE PORTION (experimental)
         for rev_iter in range(rev_samples):
             
             result = split_reviewers_start_TPMS(rev_split, split_pap_count, split_paps, k, l1, l2)
-            score = result[0]
+            score = result[0]/total_matches
             scores_for_this_sample.append(score)
             
             if score > max_score:
@@ -241,7 +243,7 @@ def main():
         max_split_revss.append(max_split_revs)
         
         ##PLOTTING HISTOGRAMS (one per outer loop iteration)
-        plt.hist([ideal_TPMS_score])
+        plt.hist([ideal_match_quality])
         
         plt.hist(scores_for_this_sample)
         plt.savefig(f"score_distribution_{pap_iter}")
@@ -269,6 +271,7 @@ def main():
     max_scores = max_scores, \
     max_split_revss = max_split_revss, \
     scores = scores, \
+    ideal_match_qualities = ideal_match_qualities, \
     rev_split_record = rev_split_record, \
     pap_split_record = pap_split_record, \
     time_taken = time_taken)
@@ -281,8 +284,8 @@ start_time = time.time()
 
 
 """SET THE FOLLOWING VARIABLES:"""
-rev_split = 30
-pap_split = 30
+rev_split = 10
+pap_split = 10
 
 k = 6
 l1 = 3 #step 1's l value
